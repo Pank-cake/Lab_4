@@ -26,7 +26,7 @@
 
 ### Тестирование
 
-![](https://github.com/Pank-cake/Lab_3/blob/main/Test/Test1.PNG)
+![](https://github.com/Pank-cake/Lab_4/blob/main/Test1.PNG)
 
 
 # Задание 2. Решить задачу на получение заданного результата для указанного дерева (fold)
@@ -56,7 +56,7 @@
 
 ### Тестирование
 
-![](https://github.com/Pank-cake/Lab_3/blob/main/Test/Test2.PNG)
+![](https://github.com/Pank-cake/Lab_4/blob/main/Test2.PNG)
 
 
 
