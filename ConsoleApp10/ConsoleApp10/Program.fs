@@ -1,92 +1,99 @@
-﻿// Задание 2: Вариант - 9
 open System
 
 // Тип дерева
-type Leaf = { value: float; left: Leaf option; right: Leaf option }
+type Tree<'T> =
+    | Node of 'T * Tree<'T> * Tree<'T>
+    | Nil
 
-// Рекурсивная вставка значения в бинарное дерево поиска
-let rec insertTree (tree: Leaf option) (newValue: float) : Leaf =
+// Вставка значения в дерево
+let rec insertTree tree newValue =
     match tree with
-    | Some t ->
-        if newValue <= t.value then
-            { t with left = Some (insertTree t.left newValue) } // Вставка в левое поддерево
-        else 
-            { t with right = Some (insertTree t.right newValue) } // Вставка в правое поддерево
-    | None -> { value = newValue; left = None; right = None }
+    | Node(value, left, right) ->
+        if newValue <= value then
+            Node(value, insertTree left newValue, right)
+        else
+            Node(value, left, insertTree right newValue)
+    | Nil -> Node(newValue, Nil, Nil)
 
-// Вывод дерева
-let rec printTree t =
-    match t with
-    | Some node ->
-        printTree node.left
-        printf "%f " node.value
-        printTree node.right
-    | None -> ()
-
-// Проверка на корректность ввода числа
+// Проверка количества элементов
 let rec checkQuantity() =
     let input = Console.ReadLine()
     let suc, n = Int32.TryParse(input)
     if suc && n > 0 then n
     else
-        printfn "Введите положительное целое число "
+        printfn "Введите положительное число:"
         checkQuantity()
 
-// Проверка на корректность ввода цифры
+// Проверка цифры (
 let rec checkFigure() =
     let input = Console.ReadLine()
     let suc, n = Int32.TryParse(input)
-    if suc && n >= 0 && n < 10 then 
-       n
+    if suc && n >= 0 && n < 10 then n
     else
-        printfn "Введите положительную цифру: "
+        printfn "Введите цифру (0-9):"
         checkFigure()
 
-// Генерация случайного дерева со значениями [-10..10]
-let generateRandomTree n =
-    let rand = Random()
-    let values =
-        List.init n (fun _ -> 
-            let number = rand.NextDouble()
-            number * 20.0 - 10.0
-        )
-    List.fold (fun acc v -> Some (insertTree acc v)) None values
+// Генерация дерева случайных чисел
+let generateTree n =
+    let r = Random()
+    let rec loop i tree =
+        if i = 0 then tree
+        else
+            let value = r.NextDouble() * 20.0 - 10.0
+            loop (i - 1) (insertTree tree value)
+    loop n Nil
 
-// Запись значений дерева в список
-let rec reWriteList (tree: Leaf option) : float list =
+// Определяет обход
+let infix root left right = (right(); root(); left())
+
+let travDepth strategy action tree =
+    let rec walk curTree depth =
+        match curTree with
+        | Node (value, left, right) -> 
+            strategy (fun () -> action value depth)
+                     (fun () -> walk left (depth + 4))
+                     (fun () -> walk right (depth + 4))
+        | Nil -> ()
+    walk tree 0
+
+let spaces n = String.replicate n "  "
+
+// Главная функция вывода
+let printTree T = 
+    travDepth infix (fun x dep -> printfn "%s%A" (spaces dep) x) T
+
+// Treefold
+let rec treeFold f acc tree =
     match tree with
-    | None -> 
-        []
-    | Some t ->
-        let leftValues = reWriteList t.left
-        let rootValue = [t.value]
-        let rightValues = reWriteList t.right
-        let allValues = leftValues @ rootValue @ rightValues // Объединение списков 
-        allValues
+    | Nil -> acc
+    | Node(value, left, right) ->
+        let accLeft = treeFold f acc left
+        let accRoot = f accLeft value
+        treeFold f accRoot right
 
 [<EntryPoint>]
 let main args =
-    printfn "Количество элементов дерева: "
+    printf "Количество элементов: "
     let n = checkQuantity()
 
-    let tree = generateRandomTree n
-    printf "Исходное дерево: "
-    printTree tree
+    let tree = generateTree n
 
-    printfn "\nЦифра для поиска в элементах: "
+    printfn "\nИсходное дерево:"
+    printTree tree 
+
+    printfn "\nЦифра для поиска: "
     let figure = checkFigure()
     let figureS = figure.ToString()
 
-    let listValues = reWriteList tree
-    let count =
-        listValues
-        |> List.fold (fun acc v ->
-            let s = v.ToString("F6")
-            if s.Contains(figureS) then 
-               acc + 1
-            else 
-               acc
-        ) 0  
+    // Функция проверки, содержит ли число нужную цифру
+    let containsDigit (v: float) =
+        let s = v.ToString("F6")
+        s.IndexOf(figureS) >= 0
 
-    printfn "Элементов дерева c цифрой %s: %d" figureS count
+    // Подсчёт элементов через treeFold
+    let count =
+        treeFold (fun acc v -> if containsDigit v then acc + 1 else acc) 0 tree
+
+    printfn "\nЭлементов с цифрой %s: %d" figureS count
+
     0
