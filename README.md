@@ -55,4 +55,4 @@
 
 ### Тестирование
 
-![](https://github.com/Pank-cake/Lab_4/blob/main/Test2.PNG)
+![]([https://github.com/Pank-cake/Lab_4/blob/main/Test2.PNG](https://github.com/Pank-cake/Lab_4/blob/main/Test1.PNG))
